@@ -11,33 +11,31 @@ import (
 )
 
 // Notify posts a notification to Slack that the build is complete.
-func Notify(b *cloudbuild.Build, webhook string) {
-	url := fmt.Sprintf("https://console.cloud.google.com/cloud-build/builds/%s", b.Id)
-	var i string
+func Notify(b *cloudbuild.Build, title string, icon string, webhook string) {
+	url := fmt.Sprintf("https://console.cloud.google.com/cloud-build/builds/%s?project=%s", b.Id, b.ProjectId)
+	var c string
 	switch b.Status {
 	case "SUCCESS":
-		i = ":white_check_mark:"
+		c = "#9CCC65"
 	case "FAILURE", "CANCELLED":
-		i = ":x:"
+		c = "#FF5252"
 	case "STATUS_UNKNOWN", "INTERNAL_ERROR":
-		i = ":interrobang:"
+		c = "#FF5252"
 	default:
-		i = ":question:"
+		c = "#FF5252"
 	}
+	t := fmt.Sprintf("%s, Id: %s, Status: %s", title, b.Id, b.Status)
 	j := fmt.Sprintf(
-		`{"text": "Cloud Build %s complete: %s %s",
-		    "attachments": [
+		`{	"icon_emoji": "%s",
+			"username": "Cloud Build/%s",
+			"attachments": [
 				{
-					"fallback": "Open build details at %s",
-					"actions": [
-						{
-							"type": "button",
-							"text": "Open details",
-							"url": "%s"
-						}
-					]
+					"color": "%s",
+					"title": "%s",
+					"title_link": "%s",
 				}
-			]}`, b.Id, i, b.Status, url, url)
+			]
+		}`, icon, b.ProjectId, c, t, url)
 
 	r := strings.NewReader(j)
 	resp, err := http.Post(webhook, "application/json", r)

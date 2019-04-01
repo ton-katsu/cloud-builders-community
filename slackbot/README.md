@@ -10,6 +10,7 @@ If you are new to Google Cloud Build, we recommend you start by visiting the [ma
 
 Clone this repository and build the builder:
 ```sh
+gcloud config set project my-project
 gcloud builds submit . --config=cloudbuild.yaml
 ```
 
@@ -22,8 +23,10 @@ Add the builder as the first step in your project's `cloudbuild.yaml`: this trig
 ```yaml
 steps:
 - name: 'gcr.io/$PROJECT_ID/slackbot'
-  args: [ '--build', '$BUILD_ID',
-          '--webhook', '<Add your webhook URL here>' ]
+  args: [ '--title', '$_TITLE',
+          '--icon', '$_ICON',
+          '--build', '$BUILD_ID',
+          '--webhook', '$_SLACK_WEBHOOK_URL' ]
 ...
 ```
 
