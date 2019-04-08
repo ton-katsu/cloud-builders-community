@@ -5,37 +5,56 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strings"
 
 	cloudbuild "google.golang.org/api/cloudbuild/v1"
 )
 
 // Notify posts a notification to Slack that the build is complete.
-func Notify(b *cloudbuild.Build, title string, icon string, webhook string) {
-	url := fmt.Sprintf("https://console.cloud.google.com/cloud-build/builds/%s?project=%s", b.Id, b.ProjectId)
+func Notify(b *cloudbuild.Build, title string, icon string, tag string, webhook string) {
+	burl := fmt.Sprintf("https://console.cloud.google.com/cloud-build/builds/%s?project=%s", b.Id, b.ProjectId)
+	query := fmt.Sprintf("tags=\"%s\"", tag)
+	params := url.Values{}
+	params.Add("tags", query)
+	params.Add("project", b.ProjectId)
+	turl := fmt.Sprintf("https://console.cloud.google.com/cloud-build/builds?%s", params.Encode())
+	pretext := fmt.Sprintf("%s / %s / %s", title, b.Id, b.Status)
 	var c string
 	switch b.Status {
 	case "SUCCESS":
 		c = "#9CCC65"
-	case "FAILURE", "CANCELLED":
+	case "FAILURE":
 		c = "#FF5252"
+	case "CANCELLED":
+		c = "#CCD1D9"
 	case "STATUS_UNKNOWN", "INTERNAL_ERROR":
 		c = "#FF5252"
 	default:
 		c = "#FF5252"
 	}
-	t := fmt.Sprintf("%s, Id: %s, Status: %s", title, b.Id, b.Status)
 	j := fmt.Sprintf(
 		`{	"icon_emoji": "%s",
 			"username": "Cloud Build/%s",
 			"attachments": [
 				{
 					"color": "%s",
-					"title": "%s",
-					"title_link": "%s",
+					"pretext": "%s",
+					"actions": [
+						{
+							"type": "button",
+							"text": "Details",
+							"url": "%s"
+						},
+						{
+							"type": "button",
+							"text": "Results using %s tag",
+							"url": "%s"
+						}
+					]
 				}
 			]
-		}`, icon, b.ProjectId, c, t, url)
+		}`, icon, b.ProjectId, c, pretext, burl, tag, turl)
 
 	r := strings.NewReader(j)
 	resp, err := http.Post(webhook, "application/json", r)

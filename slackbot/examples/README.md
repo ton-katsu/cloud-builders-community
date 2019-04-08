@@ -8,12 +8,14 @@ steps:
   args: [ '--title', '$_TITLE',
           '--icon', '$_ICON',
           '--build', '$BUILD_ID',
+          '--tag', '$_TAG',
           '--webhook', '$_SLACK_WEBHOOK_URL' ]
 - name: 'gcr.io/cloud-builders/docker'
   args: [ 'build', '.', '-f', 'Dockerfile-success']
 substitutions:
   _TITLE: 'Release trigger'
   _ICON: ':cloudbuild:'
+  _TAG: 'test'
   _SLACK_WEBHOOK_URL: https://hooks.slack.com/services/xxxxxxxx/xxxxxxxxx/xxxxxxxxxxxxxxxx
 ```
 

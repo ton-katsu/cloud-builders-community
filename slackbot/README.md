@@ -25,6 +25,7 @@ steps:
 - name: 'gcr.io/$PROJECT_ID/slackbot'
   args: [ '--title', '$_TITLE',
           '--icon', '$_ICON',
+          '--tag', '$_TAG',
           '--build', '$BUILD_ID',
           '--webhook', '$_SLACK_WEBHOOK_URL' ]
 ...
