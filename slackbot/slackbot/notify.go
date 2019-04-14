@@ -16,10 +16,10 @@ func Notify(b *cloudbuild.Build, title string, icon string, tag string, webhook 
 	burl := fmt.Sprintf("https://console.cloud.google.com/cloud-build/builds/%s?project=%s", b.Id, b.ProjectId)
 	query := fmt.Sprintf("tags=\"%s\"", tag)
 	params := url.Values{}
-	params.Add("tags", query)
+	params.Add("query", query)
 	params.Add("project", b.ProjectId)
 	turl := fmt.Sprintf("https://console.cloud.google.com/cloud-build/builds?%s", params.Encode())
-	pretext := fmt.Sprintf("%s / %s / %s", title, b.Id, b.Status)
+	text := fmt.Sprintf("[%s] %s. Id: %s\nStartTime: %s\nFinishTime: %s", b.Status, title, b.Id, b.StartTime, b.FinishTime)
 	var c string
 	switch b.Status {
 	case "SUCCESS":
@@ -39,7 +39,7 @@ func Notify(b *cloudbuild.Build, title string, icon string, tag string, webhook 
 			"attachments": [
 				{
 					"color": "%s",
-					"pretext": "%s",
+					"text": "%s",
 					"actions": [
 						{
 							"type": "button",
@@ -54,7 +54,7 @@ func Notify(b *cloudbuild.Build, title string, icon string, tag string, webhook 
 					]
 				}
 			]
-		}`, icon, b.ProjectId, c, pretext, burl, tag, turl)
+		}`, icon, b.ProjectId, c, text, burl, tag, turl)
 
 	r := strings.NewReader(j)
 	resp, err := http.Post(webhook, "application/json", r)
